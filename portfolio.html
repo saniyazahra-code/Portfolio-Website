@@ -49,12 +49,80 @@
 
   html { scroll-behavior:smooth; }
 
+  html{
+    scrollbar-width: thin;
+    scrollbar-color: var(--mint) var(--surface);
+  }
+  ::-webkit-scrollbar{ width:12px; }
+  ::-webkit-scrollbar-track{ background: var(--surface); }
+  ::-webkit-scrollbar-thumb{
+    background: linear-gradient(180deg, var(--mint), var(--lavender));
+    border-radius:8px;
+    border:3px solid var(--surface);
+    transition: border-width 0.2s ease;
+  }
+  ::-webkit-scrollbar-thumb:hover{ border-width:1px; }
+
   body{
     background: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
     line-height:1.6;
     overflow-x:hidden;
+  }
+
+  /* CUSTOM CURSOR */
+  @media (hover:hover) and (pointer:fine){
+    body{ cursor:none; }
+    a, button, .info-card, .skill-card, .project, .cert-tile{ cursor:none; }
+  }
+  .cursor-dot, .cursor-ring{
+    position:fixed;
+    top:0; left:0;
+    border-radius:50%;
+    pointer-events:none;
+    z-index:400;
+    transform: translate(-50%,-50%);
+  }
+  .cursor-dot{
+    width:6px; height:6px;
+    background: var(--mint);
+  }
+  .cursor-ring{
+    width:34px; height:34px;
+    border:1.5px solid var(--mint);
+    transition: transform 0.18s ease-out, width 0.25s ease, height 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+  }
+  .cursor-ring.hovering{
+    width:52px; height:52px;
+    border-color: var(--lavender);
+    background: var(--mint-dim);
+  }
+  @media (hover:none), (pointer:coarse), (prefers-reduced-motion: reduce){
+    .cursor-dot, .cursor-ring{ display:none; }
+    body{ cursor:auto; }
+    a, button, .info-card, .skill-card, .project, .cert-tile{ cursor:auto; }
+  }
+
+  /* ACCESSIBILITY */
+  .skip-link{
+    position:fixed;
+    top:-60px;
+    left:1rem;
+    background: var(--mint);
+    color:#0a0a0c;
+    padding:0.7rem 1.2rem;
+    border-radius:6px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.85rem;
+    font-weight:600;
+    z-index:500;
+    transition: top 0.25s ease;
+  }
+  .skip-link:focus{ top:1rem; }
+  a:focus-visible, button:focus-visible{
+    outline: 2px solid var(--mint);
+    outline-offset:3px;
   }
 
   ::selection{ background: var(--mint-dim); color: var(--mint); }
@@ -134,10 +202,12 @@
     position:fixed;
     top:0; left:0; right:0;
     z-index:100;
-    background: rgba(10,10,12,0.85);
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
     backdrop-filter: blur(10px);
     border-bottom:1px solid var(--border);
+    transition: padding 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   }
+  nav.scrolled .nav-inner{ padding-top:0.7rem; padding-bottom:0.7rem; }
   .nav-inner{
     max-width:960px;
     margin:0 auto;
@@ -145,13 +215,16 @@
     display:flex;
     justify-content:space-between;
     align-items:center;
+    transition: padding 0.3s ease;
   }
   .logo{
     font-family:'JetBrains Mono', monospace;
     font-weight:600;
     font-size:0.95rem;
     color: var(--text);
+    transition: letter-spacing 0.25s ease;
   }
+  .logo:hover{ letter-spacing:0.03em; }
   .logo span{ color: var(--mint); }
   .nav-right{ display:flex; align-items:center; gap:1.3rem; }
   .nav-links{
@@ -161,9 +234,26 @@
     font-size:0.78rem;
     color: var(--muted);
   }
-  .nav-links a{ transition: color 0.2s ease; }
+  .nav-links a{
+    position:relative;
+    padding-bottom:3px;
+    transition: color 0.2s ease;
+  }
+  .nav-links a::after{
+    content:'';
+    position:absolute;
+    left:0; bottom:0;
+    width:0%;
+    height:1.5px;
+    background: var(--mint);
+    transition: width 0.25s ease;
+  }
   .nav-links a:hover{ color: var(--mint); }
-  .nav-toggle{ display:none; background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer; }
+  .nav-links a:hover::after{ width:100%; }
+  .nav-links a.active{ color: var(--mint); }
+  .nav-links a.active::after{ width:100%; background: var(--lavender); }
+  .nav-toggle{ display:none; background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer; transition: transform 0.25s ease; }
+  .nav-toggle:hover{ transform: scale(1.15); }
 
   .theme-toggle{
     background:none;
@@ -530,14 +620,18 @@
 </head>
 <body>
 
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+<div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+
 <div class="bg-decor" aria-hidden="true">
   <span class="blob blob-1"></span>
   <span class="blob blob-2"></span>
   <span class="blob blob-3"></span>
 </div>
-<div class="scroll-progress" id="scrollProgress"></div>
+<div class="scroll-progress" id="scrollProgress" role="progressbar" aria-label="Page scroll progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
 
-<nav id="siteNav">
+<nav id="siteNav" aria-label="Primary">
   <div class="nav-inner">
     <a href="#top" class="logo">SANIYA<span>_</span>ZAHRA</a>
     <div class="nav-right">
@@ -556,6 +650,7 @@
   </div>
 </nav>
 
+<main id="main-content">
 <header class="hero" id="top">
   <div class="container hero-grid">
     <div>
@@ -772,6 +867,8 @@
     </div>
   </div>
 </section>
+
+</main>
 
 <footer>
   saniya_zahra © 2026 — built in Lahore
